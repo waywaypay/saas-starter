@@ -5,6 +5,8 @@ import {
   text,
   timestamp,
   integer,
+  boolean,
+  doublePrecision,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -127,6 +129,113 @@ export type TeamDataWithMembers = Team & {
     user: Pick<User, 'id' | 'name' | 'email'>;
   })[];
 };
+
+// SocialOS tables
+export const workspaces = pgTable('workspaces', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: varchar('name', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
+  teamId: integer('team_id').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const platformConnections = pgTable('platform_connections', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text('workspace_id')
+    .notNull()
+    .references(() => workspaces.id),
+  platform: varchar('platform', { length: 50 }).notNull(),
+  accountName: varchar('account_name', { length: 255 }).notNull(),
+  avatarUrl: text('avatar_url'),
+  connectedAt: timestamp('connected_at').notNull().defaultNow(),
+  lastSyncAt: timestamp('last_sync_at').notNull().defaultNow(),
+  isActive: boolean('is_active').notNull().default(true),
+});
+
+export const dailyMetrics = pgTable('daily_metrics', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  connectionId: text('connection_id')
+    .notNull()
+    .references(() => platformConnections.id),
+  workspaceId: text('workspace_id')
+    .notNull()
+    .references(() => workspaces.id),
+  date: timestamp('date').notNull(),
+  platform: varchar('platform', { length: 50 }).notNull(),
+  followers: integer('followers').notNull(),
+  impressions: integer('impressions').notNull(),
+  reach: integer('reach').notNull(),
+  engagements: integer('engagements').notNull(),
+  profileViews: integer('profile_views').notNull().default(0),
+});
+
+export const posts = pgTable('posts', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  connectionId: text('connection_id')
+    .notNull()
+    .references(() => platformConnections.id),
+  workspaceId: text('workspace_id')
+    .notNull()
+    .references(() => workspaces.id),
+  platform: varchar('platform', { length: 50 }).notNull(),
+  externalId: varchar('external_id', { length: 255 }).notNull(),
+  caption: text('caption'),
+  contentType: varchar('content_type', { length: 50 }).notNull(),
+  postedAt: timestamp('posted_at').notNull(),
+  reach: integer('reach').notNull().default(0),
+  impressions: integer('impressions').notNull().default(0),
+  likes: integer('likes').notNull().default(0),
+  comments: integer('comments').notNull().default(0),
+  shares: integer('shares').notNull().default(0),
+  saves: integer('saves').notNull().default(0),
+  linkClicks: integer('link_clicks').notNull().default(0),
+  engagementRate: doublePrecision('engagement_rate').notNull().default(0),
+  thumbnailUrl: text('thumbnail_url'),
+  followerCountAtPostTime: integer('follower_count_at_post_time').notNull().default(0),
+  discoveryScore: doublePrecision('discovery_score').notNull().default(0),
+});
+
+export const workspacesRelations = relations(workspaces, ({ many }) => ({
+  connections: many(platformConnections),
+  dailyMetrics: many(dailyMetrics),
+  posts: many(posts),
+}));
+
+export const platformConnectionsRelations = relations(platformConnections, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [platformConnections.workspaceId],
+    references: [workspaces.id],
+  }),
+  dailyMetrics: many(dailyMetrics),
+  posts: many(posts),
+}));
+
+export const dailyMetricsRelations = relations(dailyMetrics, ({ one }) => ({
+  connection: one(platformConnections, {
+    fields: [dailyMetrics.connectionId],
+    references: [platformConnections.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [dailyMetrics.workspaceId],
+    references: [workspaces.id],
+  }),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  connection: one(platformConnections, {
+    fields: [posts.connectionId],
+    references: [platformConnections.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [posts.workspaceId],
+    references: [workspaces.id],
+  }),
+}));
+
+export type Workspace = typeof workspaces.$inferSelect;
+export type PlatformConnection = typeof platformConnections.$inferSelect;
+export type DailyMetric = typeof dailyMetrics.$inferSelect;
+export type Post = typeof posts.$inferSelect;
 
 export enum ActivityType {
   SIGN_UP = 'SIGN_UP',
