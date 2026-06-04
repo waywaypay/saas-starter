@@ -5,9 +5,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (!process.env.POSTGRES_URL) {
-  throw new Error('POSTGRES_URL environment variable is not set');
-}
+const postgresUrl = process.env.POSTGRES_URL;
 
-export const client = postgres(process.env.POSTGRES_URL);
-export const db = drizzle(client, { schema });
+export const client = postgresUrl ? postgres(postgresUrl) : null as unknown as ReturnType<typeof postgres>;
+export const db = postgresUrl
+  ? drizzle(client, { schema })
+  : new Proxy({} as ReturnType<typeof drizzle>, {
+      get() {
+        throw new Error('POSTGRES_URL environment variable is not set');
+      },
+    });
