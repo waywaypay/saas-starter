@@ -150,6 +150,12 @@ export const platformConnections = pgTable('platform_connections', {
   connectedAt: timestamp('connected_at').notNull().defaultNow(),
   lastSyncAt: timestamp('last_sync_at').notNull().defaultNow(),
   isActive: boolean('is_active').notNull().default(true),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  tokenExpiresAt: timestamp('token_expires_at'),
+  externalAccountId: varchar('external_account_id', { length: 255 }),
+  scopes: text('scopes'),
+  errorMessage: text('error_message'),
 });
 
 export const dailyMetrics = pgTable('daily_metrics', {

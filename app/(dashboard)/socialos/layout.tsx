@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { BarChart2, LayoutList, Compass, FileText, Menu } from 'lucide-react';
+import { BarChart2, LayoutList, Compass, FileText, Menu, Settings } from 'lucide-react';
 
 export default function SocialOSLayout({
   children,
@@ -19,6 +19,7 @@ export default function SocialOSLayout({
     { href: '/socialos/posts', icon: LayoutList, label: 'Posts' },
     { href: '/socialos/discovery', icon: Compass, label: 'Discovery' },
     { href: '/socialos/report', icon: FileText, label: 'Report' },
+    { href: '/socialos/settings', icon: Settings, label: 'Connected Accounts' },
   ];
 
   return (

@@ -1,0 +1,7 @@
+ALTER TABLE platform_connections
+  ADD COLUMN IF NOT EXISTS access_token TEXT,
+  ADD COLUMN IF NOT EXISTS refresh_token TEXT,
+  ADD COLUMN IF NOT EXISTS token_expires_at TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS external_account_id VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS scopes TEXT,
+  ADD COLUMN IF NOT EXISTS error_message TEXT;
