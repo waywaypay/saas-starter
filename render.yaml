@@ -1,0 +1,50 @@
+# Render Blueprint for SocialOS.
+# This provisions a managed Postgres database AND the web service, and wires
+# them together so sign-up and the analytics dashboard work on first deploy.
+#
+# Why your previous Render deploy showed the bare template and 500'd on
+# sign-up: the service had no database (POSTGRES_URL) and no AUTH_SECRET, so
+# every server action that touches the DB crashed at runtime. This file fixes
+# that by creating the database and injecting the required env vars.
+#
+# Deploy: push this repo to GitHub, then in Render choose
+# "New +" -> "Blueprint" and point it at this repository.
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: socialos-db
+    databaseName: socialos
+    user: socialos
+    plan: free
+
+services:
+  - type: web
+    name: socialos
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: corepack enable && pnpm install && pnpm build
+    # Migrations + idempotent demo seed run at startup, when the service can
+    # reach the database over Render's private network.
+    startCommand: pnpm db:migrate && pnpm db:seed:socialos && pnpm start
+    healthCheckPath: /
+    envVars:
+      # Connection string is injected automatically from the database above.
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: socialos-db
+          property: connectionString
+      # Generated once by Render and kept stable across deploys.
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: '22'
+      # Set this to your Render service URL after the first deploy
+      # (e.g. https://socialos.onrender.com). Only needed for Stripe redirects.
+      - key: BASE_URL
+        sync: false
+      # Stripe is optional. The app and analytics run without it; the pricing
+      # page and checkout stay dormant until you add these in the Render
+      # dashboard:
+      #   STRIPE_SECRET_KEY
+      #   STRIPE_WEBHOOK_SECRET

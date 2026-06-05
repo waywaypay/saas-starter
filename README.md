@@ -86,6 +86,27 @@ To test Stripe payments, use the following test card details:
 
 When you're ready to deploy your SaaS application to production, follow these steps:
 
+### Deploy to Render (recommended — includes a database)
+
+This repo ships a [`render.yaml`](./render.yaml) Blueprint that provisions a
+managed Postgres database **and** the web service, and wires them together.
+This is important: a web service with no database will build fine but return a
+500 on sign-up (and show the bare landing page), because every server action
+that touches the database fails at runtime.
+
+1. Push this repository to GitHub.
+2. In Render, click **New + → Blueprint** and select this repository.
+3. Render reads `render.yaml`, creates the `socialos-db` Postgres instance, and
+   injects `POSTGRES_URL` and a generated `AUTH_SECRET` into the web service.
+4. On startup the service runs `pnpm db:migrate` and seeds the SocialOS demo
+   workspace, so the analytics dashboard has data immediately.
+5. After the first deploy, set `BASE_URL` to your service URL (e.g.
+   `https://socialos.onrender.com`). Stripe keys are optional and can be added
+   later in the Render dashboard.
+
+The analytics live at `/socialos/dashboard` (also linked from the landing page
+and the in-app menu).
+
 ### Set up a production Stripe webhook
 
 1. Go to the Stripe Dashboard and create a new webhook for your production environment.

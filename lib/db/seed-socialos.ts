@@ -1,5 +1,6 @@
 import { db } from './drizzle';
 import { workspaces, platformConnections, dailyMetrics, posts } from './schema';
+import { eq } from 'drizzle-orm';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 
@@ -171,6 +172,20 @@ type PostPlan = {
 };
 
 async function seedSocialOS(): Promise<void> {
+  // Idempotent: skip if the demo workspace already exists so this is safe to
+  // run on every deploy (e.g. from a Render startCommand).
+  const existing = await db
+    .select()
+    .from(workspaces)
+    .where(eq(workspaces.slug, 'acme-brand'))
+    .limit(1);
+  if (existing.length > 0) {
+    console.log(
+      "SocialOS demo data already present (workspace 'acme-brand'); skipping seed."
+    );
+    return;
+  }
+
   const now = new Date();
   const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   const ninetyOneDaysAgo = new Date(now.getTime() - 91 * 24 * 60 * 60 * 1000);
