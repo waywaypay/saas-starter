@@ -1,0 +1,51 @@
+# Render Blueprint for SocialOS
+# ---------------------------------------------------------------------------
+# This provisions everything the app needs on Render so sign-up works and the
+# SocialOS dashboard has data:
+#   1. A managed PostgreSQL database.
+#   2. A Node web service that builds the Next.js app, runs DB migrations, and
+#      seeds the SocialOS demo workspace (idempotent) on every deploy.
+#
+# To deploy: push this repo to GitHub, then in Render choose
+#   New + > Blueprint > select this repository.
+# Render reads this file, creates the database + service, wires POSTGRES_URL
+# automatically, and generates AUTH_SECRET for you. You only need to set
+# BASE_URL to your service's public URL (e.g. https://socialos.onrender.com).
+#
+# Stripe is optional — the app builds and runs without it. To enable billing,
+# add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in the Render dashboard.
+#
+# Blueprint spec: https://render.com/docs/blueprint-spec
+# ---------------------------------------------------------------------------
+
+databases:
+  - name: socialos-db
+    databaseName: socialos
+    user: socialos
+    plan: free
+    region: oregon
+
+services:
+  - type: web
+    name: socialos
+    runtime: node
+    plan: free
+    region: oregon
+    healthCheckPath: /
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm db:migrate && pnpm db:seed:socialos && pnpm build
+    startCommand: pnpm start
+    envVars:
+      # Connection string is injected automatically from the database above.
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: socialos-db
+          property: connectionString
+      # Used to sign session JWTs — generated once by Render.
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      # Set this to your service's public URL after the first deploy
+      # (e.g. https://socialos.onrender.com). Only used for Stripe redirects.
+      - key: BASE_URL
+        sync: false

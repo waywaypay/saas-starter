@@ -6,8 +6,9 @@ import { SWRConfig } from 'swr';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'Next.js SaaS Starter',
-  description: 'Get started quickly with Next.js, Postgres, and Stripe.'
+  title: 'SocialOS — Social Media Analytics',
+  description:
+    'Track reach, engagement, and follower growth across Instagram, TikTok, LinkedIn, Facebook, and YouTube in one dashboard.'
 };
 
 export const viewport: Viewport = {
