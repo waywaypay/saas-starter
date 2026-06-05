@@ -6,7 +6,10 @@ This is a starter template for building a SaaS application using **Next.js** wit
 
 ## Features
 
-- Marketing landing page (`/`) with animated Terminal element
+- **SocialOS analytics dashboard** (`/socialos`) — unified reach, engagement, and
+  follower metrics across Instagram, TikTok, LinkedIn, Facebook, and YouTube,
+  plus post-level insights, discovery, and reports
+- Marketing landing page (`/`) for SocialOS
 - Pricing page (`/pricing`) which connects to Stripe Checkout
 - Dashboard pages with CRUD operations on users/teams
 - Basic RBAC with Owner and Member roles
@@ -85,6 +88,23 @@ To test Stripe payments, use the following test card details:
 ## Going to Production
 
 When you're ready to deploy your SaaS application to production, follow these steps:
+
+### Deploy to Render (recommended)
+
+This repo ships a [`render.yaml`](./render.yaml) Blueprint that provisions a
+Postgres database and a Node web service, wires `POSTGRES_URL` automatically,
+generates `AUTH_SECRET`, and runs database migrations + the SocialOS demo seed
+on every deploy.
+
+1. Push your code to a GitHub repository.
+2. In Render, choose **New + → Blueprint** and select this repository.
+3. When prompted, set `BASE_URL` to your service's public URL
+   (e.g. `https://socialos.onrender.com`).
+4. Deploy. After the build finishes, sign-up works and `/socialos/dashboard`
+   is populated with demo analytics.
+
+> Stripe is optional — the app builds and runs without it. To enable billing,
+> add `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in the Render dashboard.
 
 ### Set up a production Stripe webhook
 
